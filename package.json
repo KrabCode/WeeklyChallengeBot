@@ -1,0 +1,11 @@
+{
+  "name": "weekly-challenge-bot",
+  "version": "1.0.0",
+  "description": "Picks a random string from a hat, accepts submissions, displays them and counts votes",
+  "main": "bot.js",
+  "author": "Jakub 'Krab' Rak",
+  "dependencies": {
+    "discord.io": "github:woor/discord.io#gateway_v6",
+    "winston": "^3.3.3"
+  }
+}
