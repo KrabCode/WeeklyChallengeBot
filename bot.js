@@ -19,7 +19,10 @@ bot.on('ready', function (evt) {
 });
 
 function getRandomChallengeTopic() {
-    let topics = ["water", "trees", "text", "hue", "circle", "wave", "map", "organic", "noise", "retro", "pixelated"];
+    let topics = [
+        "water", "trees", "text", "hue", "circle", "wave", "map", "organic", "noise", "retro", "pixelated", "fractal" // krab
+        ,"rhythm","sharp","red","grid","duplicate","shrinking","calm","speed" // pseudo_me
+    ];
     let randomIndex = Math.floor(Math.random() * topics.length);
     return topics[randomIndex];
 }
@@ -27,7 +30,54 @@ function getRandomChallengeTopic() {
 // TODO :
 // submission input for rich embed output via either text json or slash command
 // count submission embeds for a given topic in the last n days and display reaction counts
-
+const exampleEmbed = {
+    color: 0x0099ff,
+    title: 'Some title',
+    url: 'https://discord.js.org',
+    author: {
+        name: 'Some name',
+        icon_url: 'https://i.imgur.com/AfFp7pu.png',
+        url: 'https://discord.js.org',
+    },
+    description: 'Some description here',
+    thumbnail: {
+        url: 'https://i.imgur.com/AfFp7pu.png',
+    },
+    fields: [
+        {
+            name: 'Regular field title',
+            value: 'Some value here',
+        },
+        {
+            name: '\u200b',
+            value: '\u200b',
+            inline: false,
+        },
+        {
+            name: 'Inline field title',
+            value: 'Some value here',
+            inline: true,
+        },
+        {
+            name: 'Inline field title',
+            value: 'Some value here',
+            inline: true,
+        },
+        {
+            name: 'Inline field title',
+            value: 'Some value here',
+            inline: true,
+        },
+    ],
+    image: {
+        url: 'https://i.imgur.com/AfFp7pu.png',
+    },
+    timestamp: new Date(),
+    footer: {
+        text: 'Some footer text here',
+        icon_url: 'https://i.imgur.com/AfFp7pu.png',
+    },
+};
 
 bot.on('message', function (user, userID, channelID, message, evt) {
     // Our bot needs to know if it will execute a command
@@ -37,9 +87,9 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         var cmd = args[0];
 
         args = args.splice(1);
-        switch(cmd) {
+        switch (cmd) {
             // !ping
-            case 'random':{
+            case 'random': {
                 bot.sendMessage({
                     to: channelID,
                     message: 'This week\'s challenge is: ' + getRandomChallengeTopic()
@@ -49,37 +99,33 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             case 'submit':
                 bot.sendMessage({
                     to: channelID,
-                    message: 'Your submission was accepted.'
+                    embed: exampleEmbed
                 });
                 break;
-            case 'count':{
-                bot.getMessages({channelID, }, function (error, messages){
+            case 'count': {
+                let count = 0;
+                let scores = {};
+                bot.getMessages({channelID,}, function (error, messages) {
                     messages.forEach(msg => {
-                        /*  {
-                              id: '891723337129132063',
-                              type: 0,
-                              content: '!count',
-                              channel_id: '891723293525147749',
-                              author: {
-                                id: '427926485018345473',
-                                username: 'Krab',
-                                avatar: '1549a9fb533e06e6e68c182f5303a3a9',
-                                discriminator: '7933',
-                                public_flags: 0
-                              },
-                              attachments: [],
-                              embeds: [],
-                              mentions: [],
-                              mention_roles: [],
-                              pinned: false,
-                              mention_everyone: false,
-                              tts: false,
-                              timestamp: '2021-09-26T16:30:10.990000+00:00',
-                              edited_timestamp: null,
-                              flags: 0,
-                              components: []
+                        if (msg.content.substring(0, 7) === "!submit") {
+                            console.dir(msg);
+                            if (msg.reactions !== undefined) {
+                                msg.reactions.forEach(react => {
+                                    if(msg.reactions.emoji !== null){
+                                        console.log();
+                                        console.log("react.emoji: ");
+                                        console.dir(react.emoji);
+                                        console.log();
+                                        console.log("react.emoji.name: ");
+                                        console.dir(react.emoji.name);
+                                    }
+                                });
                             }
-                        * */
+                        }
+                    });
+                    bot.sendMessage({
+                        to: channelID,
+                        message: 'count of submits: ' + count
                     });
                 });
                 break;
