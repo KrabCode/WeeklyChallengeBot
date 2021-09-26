@@ -1,7 +1,7 @@
 {
   "name": "weekly-challenge-bot",
   "version": "1.0.0",
-  "description": "Picks a random string from a hat, accepts submissions, displays them and counts votes",
+  "description": "Picks a random string from a hat, counts votes on submissions that conform to a given format",
   "main": "bot.js",
   "author": "Jakub 'Krab' Rak",
   "dependencies": {
