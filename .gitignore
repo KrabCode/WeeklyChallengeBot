@@ -1,3 +1,6 @@
 *.iml
 .idea
-auth.json
+.env
+package-lock.json
+config.json
+node_modules
