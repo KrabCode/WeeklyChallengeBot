@@ -4,13 +4,8 @@ const {token} = require('./config.json');
 
 const client = new Client({intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]});
 
-let challengePrompts = [
-    "water", "trees", "text", "hue", "circle", "wave", "map", "organic", "noise", "retro", "pixelated", "fractal", // Krab
-    "rhythm", "sharp", "red", "grid", "duplicate", "shrinking", "calm", "speed", // pseudo_me
-    "mathematical", "proc-gen", "2D", "3D", // Pyro
-    "screentone / hatching", "glitch", "chase", "portal", "thrust", "update", "rolling", // nking
-    "orbit", "launch", "fly", "paper plane", "garden", "rain", "waterfall", "corridor" // CaveHex
-];
+
+const challengePrompts = require('./challengePrompts.js').getPrompts();
 
 function getRandomChallengePrompt() {
     let randomIndex = Math.floor(Math.random() * challengePrompts.length);
@@ -33,12 +28,12 @@ function getOptionValue(link, interaction) {
     return '{ option not found }';
 }
 
-let submitExplanation = ' submitted an artwork for the current challenge:\n';
+let submitExplanation = ' submitted an artwork under the topic: ';
 
-function getCurrentChallengeSubmissionsOnly(messages, challengeFilter) {
+function getCurrentChallengeSubmissionsOnly(messages, topic) {
     let result = [];
     messages.forEach(message => {
-        if (message.author.username === 'Weekly Challenge Bot' && message.content.includes(submitExplanation)) {
+        if (message.author.username === 'Weekly Challenge Bot' && message.content.includes(submitExplanation + topic)) {
             result.push(message);
         }
     });
@@ -58,20 +53,35 @@ client.on('interactionCreate', async interaction => {
     } else if (commandName === 'next') {
         await interaction.reply('The next challenge is: **' + getRandomChallengePrompt() + '**');
     } else if (commandName === 'count') {
-        let challengeTopic = getOptionValue('link', interaction);
+        let challengeTopic = getOptionValue('topic', interaction);
+        let leaderboard = "The standings are: ";
         interaction.channel.messages.fetch({limit: 100}).then(messages => {
             console.log(`Received ${messages.size} messages`);
             let submissions = getCurrentChallengeSubmissionsOnly(messages, challengeTopic);
+            if(submissions === 0){
+                interaction.reply("No submissions found");
+                return;
+            }
             console.log(`Filtered them down to ${submissions.length} submissions`);
-            interaction.reply('The winner is unknown as of yet'); // TODO count heart emojis on submissions by user
+            let submission;
+            for (let i = 0; i < submissions.length; i++) {
+                submission = submissions[i];
+                console.log(submission);
+                let reactions = submission.reactions.length;
+                // TODO this almost works
+                leaderboard += interaction.user.username + reactions;
+            }
         });
+        console.log("leaderboard: "+leaderboard);
+        await interaction.reply(leaderboard);
     } else if (commandName === 'submit') {
         let link = getOptionValue('link', interaction);
+        let topic = getOptionValue('topic', interaction);
         if (link === undefined) {
             await interaction.reply('please specify a link to your artwork');
             return;
         }
-        const message = await interaction.reply({ content: interaction.user.username + submitExplanation + link, fetchReply: true});
+        const message = await interaction.reply({ content: interaction.user.username + submitExplanation + topic + "\n" + link, fetchReply: true});
         await message.react('❤');
     }
 });

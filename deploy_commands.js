@@ -3,48 +3,45 @@ const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 const { clientId, guildId, token } = require('./config.json');
 
-let challengePrompts = [
-    "water", "trees", "text", "hue", "circle", "wave", "map", "organic",  "pixelated", "fractal", // Krab
-    "rhythm", "sharp", "red", "grid", "duplicate", "shrinking", "calm", "speed", // pseudo_me
-    "mathematical", "proc-gen", "2D", "3D", // Pyro
-    "screentone / hatching", "glitch", "chase", "portal", "thrust", "update", "rolling", // nking
-    "orbit", "launch", "fly", "paper plane", "garden", "rain", "waterfall", "corridor" // CaveHex
-];
+const challengePrompts = require('./challengePrompts.js').getPrompts();
 
-let topicOptions = [
-
-];
+let topicOptions = [];
 
 for(let i = 0; i < challengePrompts.length; i++){
     let prompt = challengePrompts[i];
-    topicOptions.push([prompt]);
+    topicOptions.push([prompt,prompt]);
 }
 
 const commands = [
     new SlashCommandBuilder()
         .setName('ping')
-        .setDescription('Replies with Pong!'),
+        .setDescription('replies with Pong!'),
 
     new SlashCommandBuilder()
         .setName('next')
-        .setDescription('Picks a random challenge'),
+        .setDescription('picks a random challenge'),
 
     new SlashCommandBuilder()
         .setName('count')
-        .setDescription('Counts votes and declares the winner'),
+        .addStringOption(option =>
+            option.setName('topic')
+                .setDescription('topic to count votes on')
+                .addChoices(topicOptions)
+                .setRequired(true))
+        .setDescription('counts votes and declares the winner'),
 
     new SlashCommandBuilder()
         .setName('submit')
-        .setDescription('Submit your artwork to participate in the challenge')
+        .setDescription('submit your artwork to participate in the challenge')
         .addStringOption(option =>
             option.setName('link')
                 .setDescription('link to your image/video artwork hosted somewhere online like imgur')
                 .setRequired(true))
         .addStringOption(option =>
-            option.setName('challenge')
+            option.setName('topic')
                 .setDescription('the challenge topic you chose for your artwork')
-                .addChoices(topicOptions
-        ).setRequired(true))
+                .addChoices(topicOptions)
+                .setRequired(true))
 
 ];
 
