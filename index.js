@@ -35,10 +35,10 @@ function getOptionValue(link, interaction) {
 
 let submitExplanation = ' submitted an artwork for the current challenge:\n';
 
-function getSubmissionsOnly(messages) {
+function getCurrentChallengeSubmissionsOnly(messages, challengeFilter) {
     let result = [];
     messages.forEach(message => {
-        if (message.content.includes(submitExplanation)) {
+        if (message.author.username === 'Weekly Challenge Bot' && message.content.includes(submitExplanation)) {
             result.push(message);
         }
     });
@@ -58,11 +58,12 @@ client.on('interactionCreate', async interaction => {
     } else if (commandName === 'next') {
         await interaction.reply('The next challenge is: **' + getRandomChallengePrompt() + '**');
     } else if (commandName === 'count') {
+        let challengeTopic = getOptionValue('link', interaction);
         interaction.channel.messages.fetch({limit: 100}).then(messages => {
             console.log(`Received ${messages.size} messages`);
-            let submissions = getSubmissionsOnly(messages);
+            let submissions = getCurrentChallengeSubmissionsOnly(messages, challengeTopic);
             console.log(`Filtered them down to ${submissions.length} submissions`);
-            interaction.reply('The winner is unknown as of yet');
+            interaction.reply('The winner is unknown as of yet'); // TODO count heart emojis on submissions by user
         });
     } else if (commandName === 'submit') {
         let link = getOptionValue('link', interaction);
