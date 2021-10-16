@@ -1,7 +1,6 @@
 const {Intents} = require("discord.js");
 const {Client} = require('discord.js');
 const {token} = require('./config.json');
-const util = require('util')
 
 const client = new Client({intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]});
 
@@ -29,21 +28,10 @@ function getOptionValue(link, interaction) {
     return '{ option not found }';
 }
 
-let submitExplanation = ' submitted an artwork under the topic: ';
-
-function getCurrentChallengeSubmissionsOnly(messages, topic) {
-    let result = [];
-    messages.forEach(message => {
-        if (message.author.username === 'Weekly Challenge Bot' && message.content.includes(submitExplanation + topic)) {
-            result.push(message);
-        }
-    });
-    return result;
-}
 
 client.on('interactionCreate', async interaction => {
-    console.log("interaction get: ");
-    // console.dir(interaction);
+    console.log("interaction get");
+    console.log(interaction);
     if (!interaction.isCommand()) {
         return;
     }
@@ -55,26 +43,49 @@ client.on('interactionCreate', async interaction => {
 
     } else if (commandName === 'count') {
         let challengeTopic = getOptionValue('topic', interaction);
-        let leaderboard = "Leaderboard:";
-
 
         interaction.channel.messages.fetch({limit: 100}).then(messages => {
             console.log(`Received ${messages.size} messages`);
             let submissions = getCurrentChallengeSubmissionsOnly(messages, challengeTopic);
             if (submissions.length === 0) {
-                interaction.reply("No submissions found for topic: " + challengeTopic);
+                interaction.reply("No submissions found for **" + challengeTopic + "**");
                 return;
             }
             console.log(`Filtered them down to ${submissions.length} submissions`);
+            submissions.sort(function(a, b) {
+                return b.reactions.message.reactions.cache.get('❤').count -
+                       a.reactions.message.reactions.cache.get('❤').count;
+            });
             let submission;
+            let allVotes = {};
+            let longestUsername = 999;
             for (let i = 0; i < submissions.length; i++) {
                 submission = submissions[i];
-                let reactions = submission.reactions.message.reactions;
-                let count = reactions.cache.get('❤').count;
-                leaderboard += "\n" + submission.interaction.user.username + ":\t\t\t" + count;
+                let username = submission.interaction.user.username;
+                let userVotes = submission.reactions.message.reactions.cache.get('❤').count;
+                if(username.length < longestUsername){
+                    longestUsername = username.length;
+                }
+                if(allVotes[username] != null){
+                    allVotes[username] = Math.max(allVotes[username], userVotes)
+                }else{
+                    allVotes[username] = userVotes;
+                }
             }
-            console.log("Posting leaderboard: \n" + leaderboard);
-            interaction.reply(leaderboard);
+
+            let header = "Leaderboard for **" + challengeTopic + "**:\n";
+            var table = "";
+            let usersAlreadyInTable = [];
+            for(let i = 0; i < submissions.length; i++){
+                let username = submission.interaction.user.username;
+                if(usersAlreadyInTable.includes(username)){
+                    continue;
+                }
+                table += username + " - " +  allVotes[username];
+                usersAlreadyInTable.push(username);
+            }
+            console.log(table.toString());
+            interaction.reply(header + table);
         });
 
 
@@ -86,11 +97,23 @@ client.on('interactionCreate', async interaction => {
             return;
         }
         const message = await interaction.reply({
-            content: interaction.user.username + submitExplanation + topic + "\n" + link,
+            content: interaction.user.username + submitFillerText + "**" + topic +  "**\n" + link,
             fetchReply: true
         });
         await message.react('❤');
     }
 });
+
+let submitFillerText = ' submitted an artwork for ';
+
+function getCurrentChallengeSubmissionsOnly(messages, topic) {
+    let result = [];
+    messages.forEach(message => {
+        if (message.author.username === 'Weekly Challenge Bot' && message.content.includes(submitFillerText + "**" + topic + "**")) {
+            result.push(message);
+        }
+    });
+    return result;
+}
 
 client.login(token);
