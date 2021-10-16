@@ -1,6 +1,7 @@
 const {Intents} = require("discord.js");
 const {Client} = require('discord.js');
 const {token} = require('./config.json');
+const util = require('util')
 
 const client = new Client({intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]});
 
@@ -42,38 +43,41 @@ function getCurrentChallengeSubmissionsOnly(messages, topic) {
 
 client.on('interactionCreate', async interaction => {
     console.log("interaction get: ");
-    console.dir(interaction);
+    // console.dir(interaction);
     if (!interaction.isCommand()) {
         return;
     }
 
     const {commandName} = interaction;
-    if (commandName === 'ping') {
-        await interaction.reply('pong');
-    } else if (commandName === 'next') {
+    if (commandName === 'announce-next-challenge') {
         await interaction.reply('The next challenge is: **' + getRandomChallengePrompt() + '**');
+
+
     } else if (commandName === 'count') {
         let challengeTopic = getOptionValue('topic', interaction);
-        let leaderboard = "The standings are: ";
+        let leaderboard = "Leaderboard:";
+
+
         interaction.channel.messages.fetch({limit: 100}).then(messages => {
             console.log(`Received ${messages.size} messages`);
             let submissions = getCurrentChallengeSubmissionsOnly(messages, challengeTopic);
-            if(submissions === 0){
-                interaction.reply("No submissions found");
+            if (submissions.length === 0) {
+                interaction.reply("No submissions found for topic: " + challengeTopic);
                 return;
             }
             console.log(`Filtered them down to ${submissions.length} submissions`);
             let submission;
             for (let i = 0; i < submissions.length; i++) {
                 submission = submissions[i];
-                console.log(submission);
-                let reactions = submission.reactions.length;
-                // TODO this almost works
-                leaderboard += interaction.user.username + reactions;
+                let reactions = submission.reactions.message.reactions;
+                let count = reactions.cache.get('❤').count;
+                leaderboard += "\n" + submission.interaction.user.username + ":\t\t\t" + count;
             }
+            console.log("Posting leaderboard: \n" + leaderboard);
+            interaction.reply(leaderboard);
         });
-        console.log("leaderboard: "+leaderboard);
-        await interaction.reply(leaderboard);
+
+
     } else if (commandName === 'submit') {
         let link = getOptionValue('link', interaction);
         let topic = getOptionValue('topic', interaction);
@@ -81,7 +85,10 @@ client.on('interactionCreate', async interaction => {
             await interaction.reply('please specify a link to your artwork');
             return;
         }
-        const message = await interaction.reply({ content: interaction.user.username + submitExplanation + topic + "\n" + link, fetchReply: true});
+        const message = await interaction.reply({
+            content: interaction.user.username + submitExplanation + topic + "\n" + link,
+            fetchReply: true
+        });
         await message.react('❤');
     }
 });

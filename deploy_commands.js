@@ -14,11 +14,7 @@ for(let i = 0; i < challengePrompts.length; i++){
 
 const commands = [
     new SlashCommandBuilder()
-        .setName('ping')
-        .setDescription('replies with Pong!'),
-
-    new SlashCommandBuilder()
-        .setName('next')
+        .setName('announce-next-challenge')
         .setDescription('picks a random challenge'),
 
     new SlashCommandBuilder()
